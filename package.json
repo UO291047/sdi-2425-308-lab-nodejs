@@ -10,5 +10,8 @@
     "type": "git",
     "url": "https://github.com/UO291047/sdi-2425-308-lab-nodejs.git"
   },
-  "private": true
+  "private": true,
+  "dependencies": {
+    "express": "^4.18.3"
+  }
 }
