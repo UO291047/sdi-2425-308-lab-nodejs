@@ -1,0 +1,14 @@
+{
+  "name": "music_store",
+  "version": "1.0.0",
+  "description": "Tienda de música",
+  "main": "holle-world-server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/UO291047/sdi-2425-308-lab-nodejs.git"
+  },
+  "private": true
+}
