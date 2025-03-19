@@ -16,8 +16,10 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const { MongoClient } = require("mongodb");
 const connectionStrings = 'mongodb+srv://admin:ADMSIS123456$@musicstoreapp.vyem2.mongodb.net/?retryWrites=true&w=majority&appName=musicstoreapp';
 const dbClient = new MongoClient(connectionStrings);
+let songsRepository = require("./repositories/songsRepository.js");
+songsRepository.init(app, dbClient);
 
-require("./routes/songs.js")(app, dbClient);
+require("./routes/songs.js")(app, songsRepository);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
