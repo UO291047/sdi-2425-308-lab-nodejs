@@ -4,7 +4,8 @@
 
 {% block main_container %}
   <h2>Modificar canción</h2>
-  <form class="form-horizontal" method="post" action="/songs/update/{{ song._id.toString() }}" encType="multipart/form-data">
+  <form class="form-horizontal" method="post"  action="/songs/edit/{{ song._id}}"
+        encType="multipart/form-data">
     <div class="form-group">
       <label class="control-label col-sm-2" for="title">Titulo:</label>
       <div class="col-sm-10">
@@ -39,7 +40,7 @@
     <div class="form-group">
       <label class="control-label col-sm-2" for="cover">Imagen portada:</label>
       <div class="col-sm-10">       
-        <img src="/covers/{{ song._id.toString() }}.png" alt="logo" />
+        <img src="/covers/{{ song._id }}.png" alt="logo" />
         <input id="cover" type="file" class="custom-file-input" name="cover"
         	accept=".png"  />
       </div>
@@ -48,7 +49,7 @@
 	  <label class="control-label col-sm-2" for="audio">Fichero audio:</label>
       <div class="col-sm-10">  
 	    <audio controls>
-		   <source  src="/audios/{{ song._id.toString() }}.mp3" type="audio/mpeg">
+		   <source  src="/audios/{{ song._id }}.mp3" type="audio/mpeg">
 		</audio>        
         <input id="audio" type="file" class="custom-file-input" name="audio"
         	accept=".mp3"  />

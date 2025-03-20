@@ -22,6 +22,13 @@ app.use(fileUpload({
   createParentPath: true
 }));
 
+const userSessionRouter = require('./routes/userSessionRouter');
+const userAudiosRouter = require('./routes/userAudiosRouter');
+app.use("/songs/add",userSessionRouter);
+app.use("/publications",userSessionRouter);
+app.use("/shop/",userSessionRouter)
+app.use("/audios/",userAudiosRouter);
+
 app.set('uploadPath', __dirname)
 app.set('clave','abcdefg');
 app.set('crypto',crypto);
