@@ -34,6 +34,9 @@ app.use("/songs/delete",userAuthorRouter);
 
 app.use("/audios/",userAudiosRouter);
 
+app.use("/songs/buy",userSessionRouter);
+app.use("/purchases",userSessionRouter);
+
 app.set('uploadPath', __dirname)
 app.set('clave','abcdefg');
 app.set('crypto',crypto);
