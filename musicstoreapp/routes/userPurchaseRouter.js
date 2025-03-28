@@ -1,17 +1,14 @@
 const express = require('express');
+const path = require("path");
 const {ObjectId} = require("mongodb");
 const songsRepository = require("../repositories/songsRepository");
 const userPurchaseRouter = express.Router();
 
 userPurchaseRouter.use(function (req, res, next) {
-    let songId = new ObjectId(req.params.id);
-    let filter = {_id: songId};
+    let songId = path.basename(req.originalUrl);
+    let filter = {_id: new ObjectId(songId)};
 
     songsRepository.findSong(filter, {}).then(song => {
-        if (!song) {
-            res.send("Canción no encontrada");
-            return;
-        }
 
         let isAuthor = song.author === req.session.user;
         if (isAuthor) {

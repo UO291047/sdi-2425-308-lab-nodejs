@@ -159,10 +159,7 @@ module.exports = function(app, songsRepository) {
         let filter = {_id: new ObjectId(req.params.id)};
         let options = {};
         songsRepository.findSong(filter, options).then(song => {
-            if (!song) {
-                res.send("Canción no encontrada");
-                return;
-            }
+
             let isAuthor = song.author === req.session.user;
             let hasPurchased = false;
 
