@@ -30,7 +30,7 @@ module.exports = function(app, songsRepository) {
         res.render("songs/add.twig");
     });
 
-    app.post('/songs/add', function(req, res){
+    app.post('/songs/add', function(req, res, next){
         let song = {
             title: req.body.title,
             kind: req.body.kind,
@@ -47,31 +47,31 @@ module.exports = function(app, songsRepository) {
                                 let audio = req.files.audio;
                                 audio.mv(app.get("uploadPath") + '/public/audios/' + result.songId + '.mp3')
                                     .then(res.redirect("/publications"))
-                                    .catch(error => res.send("Error al subir el audio de la canción"))
+                                    .catch(error => next({error, message: "Error con el archivo de audio", status: error.status, stack: error.stack}));
                             }else {
                                 res.redirect("/publications");
                             }
                         })
-                        .catch(error => res.send("Error al subir la portada de la canción"))
+                        .catch(error => next({error, message: "Error con la portada", status: error.status, stack: error.stack}));
                 } else {
                     res.redirect("/publications");
                 }
             } else{
-                res.send('Error al insertar canción: ' + result.error);
+                next({error: result.error, message: "Error con la portada", status: result.error.status, stack: result.error.stack});
             }
         });
     });
 
-    app.get('/songs/edit/:id', function(req, res) {
+    app.get('/songs/edit/:id', function(req, res, next) {
         let filter = {_id: new ObjectId(req.params.id)};
         let options = {};
         songsRepository.findSong(filter, options).then(song => {
             res.render("songs/edit.twig", {song: song});
         }).catch(error => {
-            res.send("Se ha producido un error al buscar la canción " + error)
+            next({error, message: "Error al buscar la canción", status: error.status, stack: error.stack})
         });
     });
-    app.post('/songs/edit/:id', function (req, res) {
+    app.post('/songs/edit/:id', function (req, res, next) {
         let song = {
             title: req.body.title,
             kind: req.body.kind,
@@ -85,13 +85,13 @@ module.exports = function(app, songsRepository) {
         songsRepository.updateSong(song, filter, options).then(result => {
             step1UpdateCover(req.files, songId, function (result) {
                 if (result == null) {
-                    res.send("Error al actualizar la portada o el audio de la canción");
+                    next(new Error("Error al actualizar la portada o el audio de la canción"));
                 } else {
                     res.redirect("/publications");
                 }
             });
         }).catch(error => {
-            res.send("Se ha producido un error al modificar la canción " + error)
+            next({error, message: "Error al actualizar la canción", status: error.status, stack: error.stack})
         });
     });
 
@@ -125,20 +125,20 @@ module.exports = function(app, songsRepository) {
         }
     }
 
-    app.get('/songs/delete/:id', function (req, res) {
+    app.get('/songs/delete/:id', function (req, res, next) {
         let filter = {_id: new ObjectId(req.params.id)};
         songsRepository.deleteSong(filter, {}).then(result => {
             if (result === null || result.deletedCount === 0) {
-                res.send("No se ha podido eliminar el registro");
+                next(new Error("No se ha podido eliminar el registro"));
             } else {
                 res.redirect("/publications");
             }
         }).catch(error => {
-            res.send("Se ha producido un error al intentar eliminar la canción: " + error)
+            next({error, message: "Error al borrar la canción", status: error.status, stack: error.stack})
         });
     })
 
-    app.post('/songs/buy/:id', function (req, res) {
+    app.post('/songs/buy/:id', function (req, res, next) {
         let songId = new ObjectId(req.params.id);
         let shop = {
             user: req.session.user,
@@ -146,16 +146,16 @@ module.exports = function(app, songsRepository) {
         }
         songsRepository.buySong(shop).then(result => {
             if (result.insertedId === null || typeof (result.insertedId) === undefined) {
-                res.send("Se ha producido un error al comprar la canción")
+                next(new Error("Se ha producido un error al comprar la canción"));
             } else {
                 res.redirect("/purchases");
             }
         }).catch(error => {
-            res.send("Se ha producido un error al comprar la canción " + error)
+            next({error, message: "Error al comprar la canción", status: error.status, stack: error.stack})
         })
     });
 
-    app.get('/songs/:id', function (req, res) {
+    app.get('/songs/:id', function (req, res, next) {
         let filter = {_id: new ObjectId(req.params.id)};
         let options = {};
         songsRepository.findSong(filter, options).then(song => {
@@ -169,13 +169,13 @@ module.exports = function(app, songsRepository) {
                     hasPurchased = purchases.length > 0;
                     res.render("songs/song.twig", {song: song, isAuthor: isAuthor, hasPurchased: hasPurchased});
                 }).catch(error => {
-                    res.send("Se ha producido un error al verificar las compras del usuario: " + error);
+                    next({error, message: "Se ha producido un error al verificar las compras del usuario", status: error.status, stack: error.stack})
                 });
             } else {
                 res.render("songs/song.twig", {song: song, isAuthor: isAuthor, hasPurchased: hasPurchased});
             }
         }).catch(error => {
-            res.send("Se ha producido un error al buscar la canción " + error);
+            next({error, message: "Se ha producido un error al buscar la canción", status: error.status, stack: error.stack})
         });
     });
 
@@ -193,7 +193,7 @@ module.exports = function(app, songsRepository) {
         res.send('Respuesta al patrón pro*ar');
     });
 
-    app.get('/shop', function(req, res) {
+    app.get('/shop', function(req, res, next) {
         let filter = {};
         let options = {sort: { title: 1}};
         if(req.query.search != null && typeof(req.query.search) != "undefined" && req.query.search !== ""){
@@ -222,21 +222,21 @@ module.exports = function(app, songsRepository) {
             }
             res.render("shop.twig", response);
         }).catch(error => {
-            res.send("Error al obtener las canciones: " + error);
+            next({error, message: "Error al obtener las canciones", status: error.status, stack: error.stack})
         });
     });
 
-    app.get('/publications', function (req, res) {
+    app.get('/publications', function (req, res, next) {
         let filter = {author : req.session.user};
         let options = {sort: {title: 1}};
         songsRepository.getSongs(filter, options).then(songs => {
             res.render("publications.twig", {songs: songs});
         }).catch(error => {
-            res.send("Se ha producido un error al listar las publicaciones del usuario:" + error)
+            next({error, message: "Se ha producido un error al listar las publicaciones del usuario", status: error.status, stack: error.stack})
         });
     });
 
-    app.get('/purchases', function (req, res) {
+    app.get('/purchases', function (req, res, next) {
         let filter = {user: req.session.user};
         let options = {projection: {_id: 0, song_id: 1}};
         songsRepository.getPurchases(filter, options).then(purchasedIds => {
@@ -246,10 +246,10 @@ module.exports = function(app, songsRepository) {
             songsRepository.getSongs(filter, options).then(songs => {
                 res.render("purchase.twig", {songs: songs});
             }).catch(error => {
-                res.send("Se ha producido un error al listar las publicaciones del usuario: " + error)
+                next({error, message: "Se ha producido un error al listar las publicaciones del usuario", status: error.status, stack: error.stack})
             });
         }).catch(error => {
-            res.send("Se ha producido un error al listar las canciones del usuario " + error)
+            next({error, message: "Se ha producido un error al listar las publicaciones del usuario", status: error.status, stack: error.stack})
         });
     })
 

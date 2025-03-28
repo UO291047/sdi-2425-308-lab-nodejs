@@ -12,22 +12,22 @@ userPurchaseRouter.use(function (req, res, next) {
 
         let isAuthor = song.author === req.session.user;
         if (isAuthor) {
-            res.send("No puedes comprar tu propia canción");
+            next(new Error("No puedes comprar tu propia canción"));
             return;
         }
 
         let purchaseFilter = {user: req.session.user, song_id: songId};
         songsRepository.getPurchases(purchaseFilter, {}).then(purchases => {
             if (purchases.length > 0) {
-                res.send("Ya has comprado esta canción");
+                next(new Error("Ya has comprado esta canción"));
             } else {
                 next();
             }
         }).catch(error => {
-            res.send("Se ha producido un error al verificar las compras del usuario: " + error);
+            next({error, message: "Error al buscar las canciones ya compradas", status: error.status, stack: error.stack});
         });
     }).catch(error => {
-        res.send("Se ha producido un error al buscar la canción: " + error);
+        next({error, message: "Error al buscar la canción", status: error.status, stack: error.stack});
     });
 });
 
