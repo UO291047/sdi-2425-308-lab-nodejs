@@ -159,9 +159,26 @@ module.exports = function(app, songsRepository) {
         let filter = {_id: new ObjectId(req.params.id)};
         let options = {};
         songsRepository.findSong(filter, options).then(song => {
-            res.render("songs/song.twig", {song: song});
+            if (!song) {
+                res.send("Canción no encontrada");
+                return;
+            }
+            let isAuthor = song.author === req.session.user;
+            let hasPurchased = false;
+
+            if (!isAuthor) {
+                let purchaseFilter = {user: req.session.user, song_id: new ObjectId(req.params.id)};
+                songsRepository.getPurchases(purchaseFilter, {}).then(purchases => {
+                    hasPurchased = purchases.length > 0;
+                    res.render("songs/song.twig", {song: song, isAuthor: isAuthor, hasPurchased: hasPurchased});
+                }).catch(error => {
+                    res.send("Se ha producido un error al verificar las compras del usuario: " + error);
+                });
+            } else {
+                res.render("songs/song.twig", {song: song, isAuthor: isAuthor, hasPurchased: hasPurchased});
+            }
         }).catch(error => {
-            res.send("Se ha producido un error al buscar la canción " + error)
+            res.send("Se ha producido un error al buscar la canción " + error);
         });
     });
 
