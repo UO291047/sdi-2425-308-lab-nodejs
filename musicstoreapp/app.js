@@ -8,6 +8,8 @@ let crypto = require('crypto');
 var indexRouter = require('./routes/index');
 
 var app = express();
+let jwt = require('jsonwebtoken');
+app.set('jwt', jwt);
 
 let expressSession = require('express-session');
 app.use(expressSession({
@@ -32,6 +34,9 @@ const userAuthorRouter = require('./routes/userAuthorRouter');
 app.use("/songs/edit",userAuthorRouter);
 app.use("/songs/delete",userAuthorRouter);
 
+const userTokenRouter = require('./routes/userTokenRouter');
+app.use("/api/v1.0/songs/", userTokenRouter);
+
 app.use("/audios/",userAudiosRouter);
 
 app.use("/songs/buy",userSessionRouter);
@@ -53,11 +58,11 @@ songsRepository.init(app, dbClient);
 
 require("./routes/songs.js")(app, songsRepository);
 
-require("./routes/api/songsAPIv1.0.js")(app, songsRepository);
-
 const usersRepository = require("./repositories/usersRepository.js");
 usersRepository.init(app, dbClient);
 require("./routes/users.js")(app, usersRepository);
+
+require("./routes/api/songsAPIv1.0.js")(app, songsRepository, usersRepository);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
