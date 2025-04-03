@@ -57,6 +57,9 @@ app.use("/audios/",userAudiosRouter);
 app.use("/songs/buy",userSessionRouter);
 app.use("/purchases",userSessionRouter);
 
+const userPurchaseRouter = require('./routes/userPurchaseRouter');
+app.use("/songs/buy", userPurchaseRouter);
+
 app.set('uploadPath', __dirname)
 app.set('clave','abcdefg');
 app.set('crypto',crypto);
@@ -103,9 +106,9 @@ app.use(function(err, req, res, next) {
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
+  // redirect to error page
   res.status(err.status || 500);
-  res.render('error');
+  res.render('error', { message: err.message, error: err });
 });
 
 module.exports = app;
