@@ -177,25 +177,31 @@ module.exports = function(app, songsRepository) {
                     res.render("songs/song.twig", {song: song, canBuySong: canBuySong});
                 })
             })
-
-            let isAuthor = song.author === req.session.user;
-            let hasPurchased = false;
-
-            if (!isAuthor) {
-                let purchaseFilter = {user: req.session.user, song_id: new ObjectId(req.params.id)};
-                songsRepository.getPurchases(purchaseFilter, {}).then(purchases => {
-                    hasPurchased = purchases.length > 0;
-                    res.render("songs/song.twig", {song: song, isAuthor: isAuthor, hasPurchased: hasPurchased});
-                }).catch(error => {
-                    next({error, message: "Se ha producido un error al verificar las compras del usuario", status: error.status, stack: error.stack})
-                });
-            } else {
-                res.render("songs/song.twig", {song: song, isAuthor: isAuthor, hasPurchased: hasPurchased});
-            }
         }).catch(error => {
             next({error, message: "Se ha producido un error al buscar la canción", status: error.status, stack: error.stack})
         });
     });
+
+    function userCanBuySong(user, songId, callback) {
+        let filter = {_id: new ObjectId(songId)};
+        songsRepository.findSong(filter, {}).then(song => {
+            let isAuthor = song.author === user;
+            if (isAuthor) {
+                callback(false); // No puede comprar su propia canción
+                return;
+            }
+
+            let purchaseFilter = {user: user, song_id: songId};
+            songsRepository.getPurchases(purchaseFilter, {}).then(purchases => {
+                let hasPurchased = purchases.length > 0;
+                callback(!hasPurchased); // Puede comprar si no ha comprado antes
+            }).catch(error => {
+                callback(false); // Error al buscar compras, no puede comprar
+            });
+        }).catch(error => {
+            callback(false); // Error al buscar la canción, no puede comprar
+        });
+    }
 
     app.get('/songs/:kind/:id', function(req, res) {
         let response = 'id: ' + req.params.id + '<br>'
